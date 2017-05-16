@@ -10,7 +10,7 @@ def unit_tests():
 
 setup(
     name = 'yggdrassil'
-    ,version = '1.0'
+    ,version = '0.7'
     ,author = 'frank2'
     ,author_email = 'frank2@dc949.org'
     ,description = 'A tree library. Contains implementations for binary trees and AVL trees.'
