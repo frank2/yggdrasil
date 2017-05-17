@@ -6,8 +6,6 @@ __all__ = ['Node', 'Tree', 'BinaryNode', 'BinaryTree', 'AVLNode', 'AVLTree']
 
 class Node(object):
     BRANCH_FUNCTION = None
-    LABEL_CLASS = None
-    VALUE_CLASS = None
 
     def __init__(self, **kwargs):
         self.branch_function = kwargs.setdefault('branch_function', self.BRANCH_FUNCTION)
@@ -17,31 +15,32 @@ class Node(object):
         
         if not callable(self.branch_function):
             raise ValueError('branch function must be a callable object')
+
+        self.tree = kwargs.get('tree', None)
+
+        if self.tree is None:
+            raise ValueError('tree cannot be None')
+
+        if not isinstance(self.tree, Tree):
+            raise ValueError('tree must be a Tree object')
         
-        self.label_class = kwargs.setdefault('label_class', self.LABEL_CLASS)
+        self.left = kwargs.get('left')
 
-        if self.label_class is None:
-            raise ValueError('label_class cannot be None')
+        if not self.left is None:
+            self.left.parent = self
 
-        if not inspect.isclass(self.label_class):
-            raise ValueError('label_class must be a class object')
+        self.right = kwargs.get('right')
 
-        self.value_class = kwargs.setdefault('value_class', self.VALUE_CLASS)
+        if not self.right is None:
+            self.right.parent = self
 
-        if not self.value_class is None and not inspect.isclass(self.value_class):
-            raise ValueError('value_class must be a class object')
+        self.parent = kwargs.get('parent')
+        self.label = kwargs.get('label')
 
-        self.set_left_child(kwargs.setdefault('left', None))
-        self.set_right_child(kwargs.setdefault('right', None))
-        self.set_parent(kwargs.setdefault('parent', None))
-
-        label = kwargs.setdefault('label', None)
-
-        self.set_label(label)
+        if self.label is None:
+            raise ValueError('label cannot be None')
         
-        value = kwargs.setdefault('value', None)
-
-        self.set_value(value)
+        self.value = kwargs.get('value')
 
     def set_left_child(self, node):
         if not node is None and not isinstance(node, self.__class__):
@@ -82,22 +81,19 @@ class Node(object):
         if label is None:
             raise ValueError('label cannot be None')
 
-        if not isinstance(label, self.label_class):
-            raise ValueError('label must be an instance of the label class')
-
+        old_label = self.label
         self.label = label
+        del self.tree.labels[old_label]
+        self.tree.labels[label] = self
 
     def set_value(self, value):
-        if not value is None and self.value_class is None:
-            raise RuntimeError('value class cannot be None')
-        
-        if not value is None and not isinstance(value, self.value_class):
-            raise ValueError('value must be an instance of the value class')
-
         self.value = value
 
     def is_leaf(self):
         return self.left is None and self.right is None
+
+    def __hash__(self):
+        return hash(self.label)
 
     def __repr__(self):
         return '<%s: %s>' % (self.__class__.__name__, str(self.label))
@@ -105,8 +101,6 @@ class Node(object):
 class Tree(object):
     NODE_CLASS = Node
     BRANCH_FUNCTION = None
-    LABEL_CLASS = None
-    VALUE_CLASS = None
 
     def __init__(self, **kwargs):
         self.node_class = kwargs.setdefault('node_class', self.NODE_CLASS)
@@ -128,27 +122,9 @@ class Tree(object):
         if not callable(self.branch_function):
             raise ValueError('branch function must be a callable object')
 
-        self.label_class = kwargs.setdefault('label_class', self.LABEL_CLASS)
-
-        if self.label_class is None:
-            self.label_class = self.node_class.LABEL_CLASS
-
-        if self.label_class is None:
-            raise ValueError('label_class cannot be None')
-
-        if not inspect.isclass(self.label_class):
-            raise ValueError('label_class must be a class object')
-
-        self.value_class = kwargs.setdefault('value_class', self.VALUE_CLASS)
-
-        if self.value_class is None:
-            self.value_class = self.node_class.VALUE_CLASS
-
-        if not self.value_class is None and not inspect.isclass(self.value_class):
-            raise ValueError('value_class must be a class object')
-
-        self.set_root(kwargs.setdefault('root_node', None))
+        self.root = kwargs.setdefault('root', None)
         self.nodes = dict()
+        self.labels = dict()
 
     def set_root(self, root):
         if not root is None and not isinstance(root, self.node_class):
@@ -161,14 +137,14 @@ class Tree(object):
 
     def new_node(self, label, value=None, parent=None, left=None, right=None):
         node = self.node_class(branch_function=self.branch_function
-                               ,label_class=self.label_class
-                               ,value_class=self.value_class
+                               ,tree=self
                                ,parent=parent
                                ,left=left
                                ,right=right
                                ,label=label
                                ,value=value)
         self.nodes[id(node)] = node
+        self.labels[label] = node
 
         return node
 
@@ -192,11 +168,9 @@ class Tree(object):
 
 class BinaryNode(Node):
     BRANCH_FUNCTION = cmp
-    LABEL_CLASS = int
     
     def search_path(self, label):
         node = self
-        nodes = [self]
         branch = self.branch_function(label, node.label)
 
         if not isinstance(branch, int):
@@ -212,10 +186,9 @@ class BinaryNode(Node):
             elif branch > 0:
                 node = node.right
 
-            nodes.append(node)
             branch = self.branch_function(label, node.label)
 
-        return nodes
+        return node
 
 class BinaryTree(Tree):
     NODE_CLASS = BinaryNode
@@ -225,52 +198,46 @@ class BinaryTree(Tree):
             self.root = self.new_node(label, value)
             return self.root
 
-        path = self.root.search_path(label)
-        parent = path[-1]
+        if self.has_label(label):
+            raise RuntimeError('label already exists in tree')
+
+        parent = self.root.search_path(label)
         branch = parent.branch_function(label, parent.label)
 
         if not isinstance(branch, int):
             raise ValueError('branch function returned invalid value')
-
-        if branch == 0:
-            raise RuntimeError('label already exists in tree')
         
         new_node = self.new_node(label, value)
 
         if branch < 0:
-            parent.set_left_child(new_node)
+            parent.left = new_node
         elif branch > 0:
-            parent.set_right_child(new_node)
+            parent.right = new_node
 
+        new_node.parent = parent
+        
         return new_node
 
     def find_node(self, label):
         if self.is_empty():
             raise RuntimeError('tree is empty')
         
-        path = self.root.search_path(label)
-        parent = path[-1]
+        return self.labels.get(label)
 
-        if parent.label == label:
-            return parent
-
-    def has_node(self, node):
-        if not isinstance(node, self.node_class):
-            raise ValueError('node object must be the same object as the node class')
+    def has_label(self, label):
+        return label in self.labels
         
+    def has_node(self, node):
         return id(node) in self.nodes
 
     def remove_node(self, label):
         if self.is_empty():
             raise RuntimeError('tree is empty')
 
-        path = self.root.search_path(label)
-        parent = path[-1]
-
-        if not parent.label == label:
+        if not self.has_label(label):
             raise RuntimeError('node not found')
 
-        node = parent
+        node = self.labels[label]
 
         if node.left is None and node.right is None:
             if not node.parent is None:
@@ -299,10 +266,8 @@ class BinaryTree(Tree):
             leftmost = node.right
 
             while not leftmost.left is None:
-                path.append(leftmost)
                 leftmost = leftmost.left
 
-            path.append(leftmost.right)
             leftmost.parent.left = leftmost.right
             leftmost.right = node.right
             leftmost.left = node.left
@@ -321,6 +286,7 @@ class BinaryTree(Tree):
         node.parent = None
 
         del self.nodes[id(node)]
+        del self.labels[node.label]
 
     def in_order_traversal(self):
         if self.root is None:
@@ -413,20 +379,8 @@ class AVLNode(BinaryNode):
         if not isinstance(self.height, int):
             raise ValueError('height must be an int')
 
-    def left_height(self):
-        return 0 if self.left is None else self.left.height
-
-    def right_height(self):
-        return 0 if self.right is None else self.right.height
-
-    def get_height(self):
-        return max(self.left_height(), self.right_height()) + 1
-
-    def balance(self):
-        return self.right_height() - self.left_height()
-
     def __repr__(self):
-        return '<%s: %d/%s>' % (self.__class__.__name__, self.balance(), str(self.label))
+        return '<%s: %d/%s>' % (self.__class__.__name__, self.height, str(self.label))
         
 class AVLTree(BinaryTree):
     NODE_CLASS = AVLNode
@@ -454,6 +408,31 @@ class AVLTree(BinaryTree):
         rotation_root.right = left_child
         pivot_root.left = rotation_root
         rotation_root.parent = pivot_root
+
+        # only the pivot and the rotation node need to have their heights recalculated
+        if rotation_root.left is None:
+            left_height = 0
+        else:
+            left_height = rotation_root.left.height
+
+        if rotation_root.right is None:
+            right_height = 0
+        else:
+            right_height = rotation_root.right.height
+
+        rotation_root.height = max(left_height, right_height)+1
+
+        if pivot_root.left is None:
+            left_height = 0
+        else:
+            left_height = pivot_root.left.height
+
+        if pivot_root.right is None:
+            right_height = 0
+        else:
+            right_height = pivot_root.right.height
+
+        pivot_root.height = max(left_height, right_height)+1
         
     def rotate_right(self, rotation_root):
         if not self.has_node(rotation_root):
@@ -478,6 +457,31 @@ class AVLTree(BinaryTree):
         rotation_root.left = right_child
         pivot_root.right = rotation_root
         rotation_root.parent = pivot_root
+
+        # only the pivot and the rotation node need to have their heights recalculated
+        if rotation_root.left is None:
+            left_height = 0
+        else:
+            left_height = rotation_root.left.height
+
+        if rotation_root.right is None:
+            right_height = 0
+        else:
+            right_height = rotation_root.right.height
+
+        rotation_root.height = max(left_height, right_height)+1
+
+        if pivot_root.left is None:
+            left_height = 0
+        else:
+            left_height = pivot_root.left.height
+
+        if pivot_root.right is None:
+            right_height = 0
+        else:
+            right_height = pivot_root.right.height
+
+        pivot_root.height = max(left_height, right_height)+1
         
     def update_height(self, node):
         if node is None:
@@ -487,27 +491,88 @@ class AVLTree(BinaryTree):
             raise RuntimeError('no such node in tree')
 
         while not node is None:
-            balance = node.balance()
+            if node.left is None:
+                left_height = 0
+            else:
+                left_height = node.left.height
 
-            if abs(balance) > 1:
+            if node.right is None:
+                right_height = 0
+            else:
+                right_height = node.right.height
+
+            old_height = node.height
+            node.height = max(left_height,right_height)+1
+            balance = right_height - left_height
+
+            if balance > 1 or balance < -1:
                 self.rebalance_node(node)
+                break
 
-            node.height = node.get_height()
+            if old_height == node.height:
+                break
+            
             node = node.parent
 
     def rebalance_node(self, node):
         if not self.has_node(node):
             raise RuntimeError('no such node in tree')
 
-        if node.balance() > 0:
-            if not node.right is None and node.right.balance() < 0:
-                self.rotate_right(node.right)
+        if node.left is None:
+            left_height = 0
+        else:
+            left_height = node.left.height
+
+        if node.right is None:
+            right_height = 0
+        else:
+            right_height = node.right.height
+
+        parent_balance = right_height - left_height
+
+        if parent_balance > 0:
+            child_node = node.right
+
+            if not child_node is None:
+                if child_node.left is None:
+                    left_height = 0
+                else:
+                    left_height = child_node.left.height
+
+                if child_node.right is None:
+                    right_height = 0
+                else:
+                    right_height = child_node.right.height
+
+                child_balance = right_height - left_height
+            else:
+                child_balance = 0
+                
+            if child_balance < 0:
+                self.rotate_right(child_node)
                 self.rotate_left(node)
             else:
                 self.rotate_left(node)
-        elif node.balance() < 0:
-            if not node.left is None and node.left.balance() > 0:
-                self.rotate_left(node.left)
+        elif parent_balance < 0:
+            child_node = node.left
+
+            if not child_node is None:
+                if child_node.left is None:
+                    left_height = 0
+                else:
+                    left_height = child_node.left.height
+                     
+                if child_node.right is None:
+                    right_height = 0
+                else:
+                    right_height = child_node.right.height
+
+                child_balance = right_height - left_height
+            else:
+                child_balance = 0
+
+            if child_balance > 0:
+                self.rotate_left(child_node)
                 self.rotate_right(node)
             else:
                 self.rotate_right(node)
@@ -523,13 +588,10 @@ class AVLTree(BinaryTree):
         if self.is_empty():
             raise RuntimeError('tree is empty')
 
-        path = self.root.search_path(label)
-        parent = path[-1]
-
-        if not parent.label == label:
+        if not self.has_label(label):
             raise RuntimeError('node not found')
 
-        node = parent
+        node = self.labels[label]
 
         if node.left is None and node.right is None:
             if not node.parent is None:
@@ -600,3 +662,4 @@ class AVLTree(BinaryTree):
         node.parent = None
 
         del self.nodes[id(node)]
+        del self.labels[node.label]
