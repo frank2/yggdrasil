@@ -9,8 +9,8 @@ def unit_tests():
     return test_suite
 
 setup(
-    name = 'yggdrassil'
-    ,version = '0.7'
+    name = 'yggdrasil'
+    ,version = '0.7.1'
     ,author = 'frank2'
     ,author_email = 'frank2@dc949.org'
     ,description = 'A tree library. Contains implementations for binary trees and AVL trees.'

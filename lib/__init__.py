@@ -181,88 +181,11 @@ class Tree(object):
     def remove_node(self, label):
         raise NotImplementedError
 
-    def in_order_traversal(self):
-        if self.root is None:
-            return
-
-        visited = dict()
-        node_stack = [self.root]
-        nodes = len(node_stack)
-
-        while nodes > 0:
-            node = node_stack[-1]
-            
-            if not node.left is None and not node.left.label in visited:
-                node_stack.append(node.left)
-                nodes += 1
-                continue
-
-            yield node
-            visited[node.label] = None
-            node_stack.pop()
-            nodes -= 1
-
-            if not node.right is None and not node.right.label in visited:
-                node_stack.append(node.right)
-                nodes += 1
-                continue
-
-    def post_order_traversal(self):
-        if self.root is None:
-            return
-
-        visited = dict()
-        node_stack = [self.root]
-        nodes = len(node_stack)
-
-        while nodes > 0:
-            node = node_stack[-1]
-            
-            if not node.left is None and not node.left.label in visited:
-                node_stack.append(node.left)
-                nodes += 1
-                continue
-
-            if not node.right is None and not node.right.label in visited:
-                node_stack.append(node.right)
-                nodes += 1
-                continue
-
-            yield node
-            visited[node.label] = None
-            node_stack.pop()
-            nodes -= 1
-
-    def pre_order_traversal(self):
-        if self.root is None:
-            return
-
-        visited = dict()
-        node_stack = [self.root]
-        nodes = len(node_stack)
-
-        while nodes > 0:
-            node = node_stack[-1]
-
-            if not node.label in visited:
-                yield node
-                visited[node.label] = None
-            
-            if not node.left is None and not node.left.label in visited:
-                node_stack.append(node.left)
-                nodes += 1
-                continue
-
-            if not node.right is None and not node.right.label in visited:
-                node_stack.append(node.right)
-                nodes += 1
-                continue
-
-            node_stack.pop()
-            nodes -= 1
-
     def __repr__(self):
         return '<%s: %s>' % (self.__class__.__name__, ', '.join(map(repr, self.in_order_traversal())))
+
+    def __len__(self):
+        return len(self.nodes)
 
     def __iter__(self):
         return self.in_order_traversal()
@@ -398,6 +321,86 @@ class BinaryTree(Tree):
         node.parent = None
 
         del self.nodes[id(node)]
+
+    def in_order_traversal(self):
+        if self.root is None:
+            return
+
+        visited = dict()
+        node_stack = [self.root]
+        nodes = len(node_stack)
+
+        while nodes > 0:
+            node = node_stack[-1]
+            
+            if not node.left is None and not node.left.label in visited:
+                node_stack.append(node.left)
+                nodes += 1
+                continue
+
+            yield node
+            visited[node.label] = None
+            node_stack.pop()
+            nodes -= 1
+
+            if not node.right is None and not node.right.label in visited:
+                node_stack.append(node.right)
+                nodes += 1
+                continue
+
+    def post_order_traversal(self):
+        if self.root is None:
+            return
+
+        visited = dict()
+        node_stack = [self.root]
+        nodes = len(node_stack)
+
+        while nodes > 0:
+            node = node_stack[-1]
+            
+            if not node.left is None and not node.left.label in visited:
+                node_stack.append(node.left)
+                nodes += 1
+                continue
+
+            if not node.right is None and not node.right.label in visited:
+                node_stack.append(node.right)
+                nodes += 1
+                continue
+
+            yield node
+            visited[node.label] = None
+            node_stack.pop()
+            nodes -= 1
+
+    def pre_order_traversal(self):
+        if self.root is None:
+            return
+
+        visited = dict()
+        node_stack = [self.root]
+        nodes = len(node_stack)
+
+        while nodes > 0:
+            node = node_stack[-1]
+
+            if not node.label in visited:
+                yield node
+                visited[node.label] = None
+            
+            if not node.left is None and not node.left.label in visited:
+                node_stack.append(node.left)
+                nodes += 1
+                continue
+
+            if not node.right is None and not node.right.label in visited:
+                node_stack.append(node.right)
+                nodes += 1
+                continue
+
+            node_stack.pop()
+            nodes -= 1
 
 class AVLNode(BinaryNode):
     HEIGHT = 0
