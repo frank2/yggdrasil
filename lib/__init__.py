@@ -91,7 +91,7 @@ class Node(object):
         if not value is None and self.value_class is None:
             raise RuntimeError('value class cannot be None')
         
-        if not value is None and isinstance(value, self.value_class):
+        if not value is None and not isinstance(value, self.value_class):
             raise ValueError('value must be an instance of the value class')
 
         self.value = value
@@ -480,6 +480,9 @@ class AVLTree(BinaryTree):
         rotation_root.parent = pivot_root
         
     def update_height(self, node):
+        if node is None:
+            return
+        
         if not self.has_node(node):
             raise RuntimeError('no such node in tree')
 
@@ -537,22 +540,25 @@ class AVLTree(BinaryTree):
 
             if node == self.root:
                 self.root = None
+
+            parent = node.parent
+            node.parent = None
                 
-            self.update_height(node.parent)
+            self.update_height(parent)
         elif node.left is None or node.right is None:
             if node.left is None:
                 replacement_node = node.right
             elif node.right is None:
                 replacement_node = node.left
 
+            replacement_node.parent = node.parent
+            
             if node == self.root:
                 self.root = replacement_node
             elif node.parent.left == node:
                 node.parent.left = replacement_node
-                replacement_node.parent = node.parent
             elif node.parent.right == node:
                 node.parent.right = replacement_node
-                replacement_node.parent = node.parent
 
             self.update_height(node.parent)
         elif not node.left is None and not node.right is None:
