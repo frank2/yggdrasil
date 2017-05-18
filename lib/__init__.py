@@ -178,6 +178,10 @@ class Tree(object):
         else:
             self.labels[label].set_value(value)
 
+    def __delitem__(self, label):
+        if label in self.labels:
+            self.remove_node(label)
+
 class BinaryNode(Node):
     BRANCH_FUNCTION = cmp
     

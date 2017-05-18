@@ -74,6 +74,10 @@ class BinaryTreeTest(unittest.TestCase):
 
             index += 1
 
+        del tree_obj[7]
+        
+        self.assertFalse(7 in tree_obj)
+
 class AVLTreeTest(unittest.TestCase):
     def test_avl(self):
         forward_tree = AVLTree()
