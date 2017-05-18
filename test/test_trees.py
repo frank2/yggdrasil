@@ -74,6 +74,8 @@ class BinaryTreeTest(unittest.TestCase):
 
             index += 1
 
+        self.assertEqual(unshuffled, tree_obj.keys())
+
         del tree_obj[7]
         
         self.assertFalse(7 in tree_obj)

@@ -157,6 +157,15 @@ class Tree(object):
     def remove_node(self, label):
         raise NotImplementedError
 
+    def keys(self):
+        return map(lambda x: x.label, self.in_order_traversal())
+
+    def values(self):
+        return map(lambda x: x.value, self.in_order_traversal())
+
+    def items(self):
+        return zip(self.keys(), self.values())
+
     def __repr__(self):
         return '<%s: %s>' % (self.__class__.__name__, ', '.join(map(repr, self.in_order_traversal())))
 
