@@ -10,7 +10,7 @@ def unit_tests():
 
 setup(
     name = 'yggdrasil'
-    ,version = '0.7.1'
+    ,version = '0.7.2'
     ,author = 'frank2'
     ,author_email = 'frank2@dc949.org'
     ,description = 'A tree library. Contains implementations for binary trees and AVL trees.'
@@ -20,7 +20,8 @@ setup(
     ,package_dir = {'yggdrasil': 'lib'}
     ,packages = ['yggdrasil']
     ,test_suite = 'setup.unit_tests'
-    ,long_description = '''Yggdrasil is a flexible tree library that allows you to define your very own trees from the ground up.'''
+    ,long_description = '''Yggdrasil is a flexible tree library that allows you to define your very own trees from the ground up.
+Surprisingly, despite being written purely in Python, it manages to outperform its CPython equivalents!'''
     ,classifiers = [
         'Development Status :: 4 - Beta'
         ,'Topic :: Software Development :: Libraries'

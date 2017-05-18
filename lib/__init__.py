@@ -163,8 +163,20 @@ class Tree(object):
     def __len__(self):
         return len(self.nodes)
 
+    def __contains__(self, label):
+        return label in self.labels
+
     def __iter__(self):
-        return self.in_order_traversal()
+        raise NotImplementedError
+
+    def __getitem__(self, label):
+        return self.labels[label]
+
+    def __setitem__(self, label, value):
+        if not label in self.labels:
+            self.add_node(label, value)
+        else:
+            self.labels[label].set_value(value)
 
 class BinaryNode(Node):
     BRANCH_FUNCTION = cmp
@@ -367,6 +379,10 @@ class BinaryTree(Tree):
 
             node_stack.pop()
             nodes -= 1
+
+    def __iter__(self):
+        for node in self.in_order_traversal():
+            yield node.label
 
 class AVLNode(BinaryNode):
     HEIGHT = 0

@@ -15,7 +15,7 @@ class BinaryTreeTest(unittest.TestCase):
         for item in shuffled:
             tree_obj.add_node(item)
 
-        self.assertEqual(map(lambda x: x.label, tree_obj), unshuffled)
+        self.assertEqual(list(tree_obj), unshuffled)
 
     def test_find(self):
         tree_obj = BinaryTree()
@@ -39,19 +39,40 @@ class BinaryTreeTest(unittest.TestCase):
             tree_obj.add_node(item)
 
         tree_obj.remove_node(ord('B'))
-        self.assertEqual(map(lambda x: x.label, tree_obj)
+        self.assertEqual(list(tree_obj)
                          ,map(ord, 'ACDEFGH'))
 
         tree_obj.remove_node(ord('A'))
         self.assertEqual(ord('C'), tree_obj.root.left.label)
-        self.assertEqual(map(lambda x: x.label, tree_obj)
+        self.assertEqual(list(tree_obj)
                          ,map(ord, 'CDEFGH'))
 
         tree_obj.remove_node(ord('D'))
         self.assertEqual(ord('E'), tree_obj.root.label)
         self.assertEqual(ord('H'), tree_obj.root.right.label)
-        self.assertEqual(map(lambda x: x.label, tree_obj)
+        self.assertEqual(list(tree_obj)
                          ,map(ord, 'CEFGH'))
+
+    def test_sugar(self):
+        tree_obj = BinaryTree()
+        unshuffled = [i for i in xrange(20)]
+        shuffled = unshuffled[:]
+        random.shuffle(shuffled)
+
+        for item in shuffled:
+            tree_obj.add_node(item)
+
+        for k in unshuffled:
+            node = tree_obj[k]
+            self.assertEqual(node.label, k)
+            self.assertTrue(k in tree_obj)
+
+        index = 0
+
+        for label in tree_obj:
+            self.assertEqual(label, unshuffled[index])
+
+            index += 1
 
 class AVLTreeTest(unittest.TestCase):
     def test_avl(self):
