@@ -297,9 +297,12 @@ class BinaryTree(Tree):
             leftmost_parent = leftmost.parent
 
             if leftmost_parent == node:
-                leftmost.right = replaced_node
+                node.right = replaced_node
             else:
                 leftmost.parent.left = replaced_node
+
+                if not replaced_node is None:
+                    replaced_node.parent = leftmost.parent
         
             leftmost.right = node.right
             leftmost.left = node.left
@@ -675,9 +678,12 @@ class AVLTree(BinaryTree):
             leftmost_parent = leftmost.parent
 
             if leftmost_parent == node:
-                leftmost.right = replaced_node
+                node.right = replaced_node
             else:
                 leftmost.parent.left = replaced_node
+
+                if not replaced_node is None:
+                    replaced_node.parent = leftmost.parent
         
             leftmost.right = node.right
             leftmost.left = node.left
