@@ -289,14 +289,27 @@ class BinaryTree(Tree):
                 replacement_node.parent = node.parent
         elif not node.left is None and not node.right is None:
             leftmost = node.right
-
+                                
             while not leftmost.left is None:
                 leftmost = leftmost.left
+            
+            replaced_node = leftmost.right
+            leftmost_parent = leftmost.parent
 
-            leftmost.parent.left = leftmost.right
+            if leftmost_parent == node:
+                leftmost.right = replaced_node
+            else:
+                leftmost.parent.left = replaced_node
+        
             leftmost.right = node.right
             leftmost.left = node.left
             leftmost.parent = node.parent
+
+            if not node.left is None:
+                node.left.parent = leftmost
+
+            if not node.right is None:
+                node.right.parent = leftmost
 
             if node == self.root:
                 self.root = leftmost
@@ -417,7 +430,7 @@ class AVLTree(BinaryTree):
     def rotate_left(self, rotation_root):
         if not self.has_node(rotation_root):
             raise RuntimeError('no such node in tree')
-
+        
         pivot_root = rotation_root.right
         left_child = pivot_root.left
         rotation_parent = rotation_root.parent
@@ -466,7 +479,7 @@ class AVLTree(BinaryTree):
     def rotate_right(self, rotation_root):
         if not self.has_node(rotation_root):
             raise RuntimeError('no such node in tree')
-
+        
         pivot_root = rotation_root.left
         right_child = pivot_root.right
         rotation_parent = rotation_root.parent
@@ -660,7 +673,11 @@ class AVLTree(BinaryTree):
             
             replaced_node = leftmost.right
             leftmost_parent = leftmost.parent
-            leftmost.parent.left = replaced_node
+
+            if leftmost_parent == node:
+                leftmost.right = replaced_node
+            else:
+                leftmost.parent.left = replaced_node
         
             leftmost.right = node.right
             leftmost.left = node.left
