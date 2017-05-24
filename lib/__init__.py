@@ -308,11 +308,17 @@ class BinaryTree(Tree):
             leftmost.left = node.left
             leftmost.parent = node.parent
 
-            if not node.left is None:
-                node.left.parent = leftmost
+            if not leftmost.left is None:
+                leftmost.left.parent = leftmost
 
-            if not node.right is None:
-                node.right.parent = leftmost
+            if not leftmost.right is None:
+                leftmost.right.parent = leftmost
+
+            if not leftmost.parent is None:
+                if node == leftmost.parent.left:
+                    leftmost.parent.left = leftmost
+                elif node == leftmost.parent.right:
+                    leftmost.parent.right = leftmost
 
             if node == self.root:
                 self.root = leftmost
@@ -527,7 +533,7 @@ class AVLTree(BinaryTree):
             right_height = pivot_root.right.height
 
         pivot_root.height = max(left_height, right_height)+1
-        
+                
     def update_height(self, node):
         if node is None:
             return
@@ -690,11 +696,17 @@ class AVLTree(BinaryTree):
             leftmost.parent = node.parent
             leftmost.height = node.height
 
-            if not node.left is None:
-                node.left.parent = leftmost
+            if not leftmost.left is None:
+                leftmost.left.parent = leftmost
 
-            if not node.right is None:
-                node.right.parent = leftmost
+            if not leftmost.right is None:
+                leftmost.right.parent = leftmost
+
+            if not leftmost.parent is None:
+                if node == leftmost.parent.left:
+                    leftmost.parent.left = leftmost
+                elif node == leftmost.parent.right:
+                    leftmost.parent.right = leftmost
 
             if node == self.root:
                 self.root = leftmost
@@ -706,8 +718,10 @@ class AVLTree(BinaryTree):
 
             if not replaced_node is None:
                 self.update_height(replaced_node)
-            else:
+            elif not leftmost_parent == node:
                 self.update_height(leftmost_parent)
+            else:
+                self.update_height(leftmost)
 
         node.left = None
         node.right = None

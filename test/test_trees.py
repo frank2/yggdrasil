@@ -126,3 +126,15 @@ class AVLTreeTest(unittest.TestCase):
             reverse_tree.add_node(i)
 
             self.assertEqual(reverse_values[9-i], map(lambda x: x.label, reverse_tree.pre_order_traversal()))
+
+        # annoying case found while using the library
+
+        buggy_tree = AVLTree()
+
+        buggy_tree.add_node(809136)
+        buggy_tree.add_node(792336)
+        buggy_tree.add_node(809168)
+        buggy_tree.add_node(809104)
+        buggy_tree.remove_node(809136)
+
+        self.assertEqual([809104, 792336, 809168], map(lambda x: x.label, buggy_tree.pre_order_traversal()))
